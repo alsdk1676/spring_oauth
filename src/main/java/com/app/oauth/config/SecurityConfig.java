@@ -68,13 +68,16 @@ public class SecurityConfig {
                                         Map<String, Object> responseMap = new HashMap<>();
                                         Map<String, Object> claims = new HashMap<>();
 
+                                        claims.put("email", email);
+                                        claims.put("name", name);
+
 //                                추가 정보를 받기 위해 provider와 email을 화면으로 넘긴다.
                                         Long memberId = memberService.getMemberIdByMemberEmail(email);
 //                                        값이 있다면 프로바이더 없다면 null
                                         String foundMemberProvider = memberService.getMemberById(memberId).map(OauthMemberVO::getMemberProvider).orElse(null);
                                         String redirectUrl = "";
 //                                        기존 회원의 로그인
-                                        if(memberId != null){
+                                        if(memberId != null && foundMemberProvider.equals(provider)){
                                             String jwtToken = jwtTokenUtil.generateToken(claims);
                                             redirectUrl = "http://localhost:3000/?jwtToken=" + jwtToken;
 
@@ -103,7 +106,7 @@ public class SecurityConfig {
 //                                                4) 로그인 처리
                                             }else{
 //                                                타사의 소셜로그인
-                                                redirectUrl = "http://localhost:3000/sign-in?provider=" + provider + "&login=false";
+                                                redirectUrl = "http://localhost:3000/sign-in?provider=" + foundMemberProvider + "&login=false";
                                             }
 //                                            아니라면 신규 가입
                                         } else{

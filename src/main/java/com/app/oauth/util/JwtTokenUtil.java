@@ -17,7 +17,7 @@ import java.util.Map;
 @Slf4j
 public class JwtTokenUtil {
 
-    @Value("jwt.secret")
+    @Value("${jwt.secret}")
     private String secretKey;
 
 //    토큰 생성 메서드
