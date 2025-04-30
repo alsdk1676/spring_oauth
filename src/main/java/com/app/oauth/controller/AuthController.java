@@ -3,6 +3,8 @@ package com.app.oauth.controller;
 import com.app.oauth.domain.OauthMemberVO;
 import com.app.oauth.service.MemberService;
 import com.app.oauth.util.JwtTokenUtil;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -81,13 +83,45 @@ public class AuthController {
 //    토큰 정보로 유저 정보를 가져 제공하는 API
 //    ***** 토큰을 헤더로 주고받는다 *****
     @PostMapping("profile")
-    public void profile(
+    public ResponseEntity<Map<String, Object>> profile(
             @RequestHeader(value = "Authorization", required = false) String jwtToken
     ){
-        log.info("jwtToken: {}", jwtToken);
+//        log.info("jwtToken: {}", jwtToken);
+        Map<String, Object> response = new HashMap<>();
+        String token = jwtToken != null ? jwtToken.replace("Bearer ", "") : null;
+
+//        log.info("token: {}", token);
+
+//        Alt + Ctrl + T
+        try {
+            if(token != null && jwtTokenUtil.isTokenValid(token)) {
+    //            유저 정보 바꾸기
+                Claims claims = jwtTokenUtil.parseToken(token);
+                String memberEmail = claims.get("email").toString();
+    //            log.info("parseMemberEmail : {}", memberEmail);
+
+                Long memberId = memberService.getMemberIdByMemberEmail(memberEmail);
+                OauthMemberVO foundUser = memberService.getMemberById(memberId).orElseThrow(() -> {
+                    throw new RuntimeException("member profile, Not found User");
+                });
+
+                foundUser.setMemberPassword(null); // 백엔드는 화면에 비밀번호 노출 X
+                response.put("currentUser", foundUser);
+                return ResponseEntity.ok(response);
+            }
+        } catch (ExpiredJwtException e) {
+            response.put("message", "토큰이 만료되었습니다.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+//        ** 예외처리 **
+
+        response.put("message", "토큰이 만료되었습니다.");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
 //    로그인 이후 이용해야하는 페이지
+
 
 
 }

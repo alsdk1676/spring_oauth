@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.security.Signature;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +30,7 @@ public class JwtTokenUtil {
 
 //        24시간
         long expirationTimeInMillis = 24 * 60 * 60 * 1000;
+//        long expirationTimeInMillis = 5000; // 5초
         Date expirationDate = new Date(System.currentTimeMillis() + expirationTimeInMillis);
 
         return Jwts.builder()
@@ -51,13 +51,13 @@ public class JwtTokenUtil {
                     .getBody(); // Claims라는 객체로 넘김
 
         } catch (ExpiredJwtException e) {
-//            만료된 토큰
+//            만료된 토큰 처리
             log.error("Expired JWT Token", e);
             throw new RuntimeException("Expired JWT Token");
         } catch (Exception e) {
 //            토큰 정보 일치하지 않음
             log.error("Invalid JWT Token", e);
-            throw new RuntimeException("Invalid JWT Token");
+            throw new RuntimeException("Invalid JWT Token"); // 실제로는 프로젝트 exception으로 변경하기
         }
     }
 
